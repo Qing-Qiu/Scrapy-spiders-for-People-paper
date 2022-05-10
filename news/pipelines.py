@@ -7,7 +7,27 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 
+import pymysql
 
-class NewsPipeline:
+
+class NewsPipeline(object):
+    conn = None
+    cursor = None
+
+    def open_spider(self, spider):
+        self.conn = pymysql.connect(host='localhost', port=3306,
+                                    db='paper_db', user='root',
+                                    passwd='root', charset='utf8')
+
     def process_item(self, item, spider):
+#        values = (item['title'], item['sub_title'], item['article'])
+        values = (str(item['title']), str(item['sub_title']), str(item['article']))
+        sql = 'INSERT INTO papers VALUES(%s,%s,%s)'
+        self.cursor = self.conn.cursor()
+        self.cursor.execute(sql, values)
+        self.conn.commit()
         return item
+
+    def close_spider(self, spider):
+        self.cursor.commit()
+        self.conn.close()

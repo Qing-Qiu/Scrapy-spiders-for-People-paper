@@ -29,7 +29,7 @@ class PaperSpider(scrapy.Spider):
         paper_item['title'] = title.xpath("./text()").extract()
         paper_item['sub_title'] = sub_title.xpath("./text()").extract()
         paper_item['article'] = total.xpath("./text()").extract()
-        print(paper_item)
+        #print(paper_item)
 
         next_ = response.xpath("/html/body/div[@class='main w1000']/"
                                "div[@class='right right-main']/"
@@ -54,9 +54,6 @@ class PaperSpider(scrapy.Spider):
             year = temp[0:4]
             month = temp[4:6]
             day = temp[6:8]
-#            _year: str
-#            _month: str
-#            _day: str
             if calendar.mdays[int(month)] == int(day):
                 if int(month) == 12:
                     _year = str(int(year) + 1)
@@ -80,3 +77,4 @@ class PaperSpider(scrapy.Spider):
             new_url = url_ + date + "nw.D110000renmrb_" + temp + "_1-01.htm"
             print(new_url)
             yield scrapy.Request(new_url, callback=self.parse)
+        yield paper_item
