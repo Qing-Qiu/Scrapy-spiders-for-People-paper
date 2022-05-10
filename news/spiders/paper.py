@@ -24,7 +24,7 @@ class PaperSpider(scrapy.Spider):
                                    "div[@class='right right-main']/"
                                    "div[@class='article-box']/div"
                                    "[@class='article']/h2")
-        # for items in total:
+
         paper_item = NewsItem()
         paper_item['title'] = title.xpath("./text()").extract()
         paper_item['sub_title'] = sub_title.xpath("./text()").extract()
@@ -38,13 +38,45 @@ class PaperSpider(scrapy.Spider):
         next_page = next_.xpath("./a[2]/@href").extract()
         if next_page:
             next_page = next_page[0]
-            print(next_page)
             temp = next_page[17:25]
-            date = temp[0:4]+"-"+temp[4:6]+"/"+temp[6:8]+"/"
+            year = temp[0:4]
+            month = temp[4:6]
+            day = temp[6:8]
+            date = year + "-" + month + "/" + day + "/"
             url_ = "http://paper.people.com.cn/rmrb/html/"
             new_url = url_ + date + next_page
             print(new_url)
-            yield scrapy.Request(url_ + date + next_page, callback=self.parse)
+            yield scrapy.Request(new_url, callback=self.parse)
         else:
-            pass
-        next_edit = 0
+            prev_page = next_.xpath("./a[1]/@href").extract()
+            prev_page = prev_page[0]
+            temp = prev_page[17:25]
+            year = temp[0:4]
+            month = temp[4:6]
+            day = temp[6:8]
+#            _year: str
+#            _month: str
+#            _day: str
+            if calendar.mdays[int(month)] == int(day):
+                if int(month) == 12:
+                    _year = str(int(year) + 1)
+                    _month = "01"
+                    _day = "01"
+                else:
+                    _year = year
+                    _month = str(int(month) + 1)
+                    if int(_month) < 9:
+                        _month = "0" + _month
+                    _day = "01"
+            else:
+                _year = year
+                _month = month
+                _day = str(int(day) + 1)
+                if int(day) < 9:
+                    _day = "0" + _day
+            temp = _year + _month + _day
+            date = _year + "-" + _month + "/" + _day + "/"
+            url_ = "http://paper.people.com.cn/rmrb/html/"
+            new_url = url_ + date + "nw.D110000renmrb_" + temp + "_1-01.htm"
+            print(new_url)
+            yield scrapy.Request(new_url, callback=self.parse)
