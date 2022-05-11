@@ -12,10 +12,10 @@ class PaperSpider(scrapy.Spider):
                   'nw.D110000renmrb_20210101_1-01.htm']
 
     def parse(self, response):
-        total = response.xpath("/html/body/div[@class='main w1000']/"
-                               "div[@class='right right-main']/"
-                               "div[@class='article-box']/div"
-                               "[@class='article']/div[@id='ozoom']/p")
+        context = response.xpath("/html/body/div[@class='main w1000']/"
+                                 "div[@class='right right-main']/"
+                                 "div[@class='article-box']/div"
+                                 "[@class='article']/div[@id='ozoom']/p")
         title = response.xpath("/html/body/div[@class='main w1000']/"
                                "div[@class='right right-main']/"
                                "div[@class='article-box']/div"
@@ -28,9 +28,10 @@ class PaperSpider(scrapy.Spider):
         paper_item = NewsItem()
         paper_item['title'] = title.xpath("./text()").extract()
         paper_item['sub_title'] = sub_title.xpath("./text()").extract()
-        paper_item['article'] = total.xpath("./text()").extract()
-        #print(paper_item)
-
+        paper_item['context'] = context.xpath("./text()").extract()
+        paper_item['context'] = "".join(paper_item['context'])
+        paper_item['context'] = paper_item['context'].replace(" ", "")
+        paper_item['url'] = response.request.url
         next_ = response.xpath("/html/body/div[@class='main w1000']/"
                                "div[@class='right right-main']/"
                                "div[@class='article-box']/div"
