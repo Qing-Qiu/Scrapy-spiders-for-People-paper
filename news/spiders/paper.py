@@ -8,8 +8,7 @@ from news.items import NewsItem
 class PaperSpider(scrapy.Spider):
     name = 'paper'
     allowed_domains = ['paper.people.com.cn']
-    start_urls = ['http://paper.people.com.cn/rmrb/html/2021-01/01/'
-                  'nw.D110000renmrb_20210101_1-01.htm']
+    start_urls = ['http://paper.people.com.cn/rmrb/html/2021-01/01/nw.D110000renmrb_20210101_1-05.htm']
 
     def parse(self, response):
         context = response.xpath("/html/body/div[@class='main w1000']/"
@@ -32,13 +31,29 @@ class PaperSpider(scrapy.Spider):
         paper_item['context'] = "".join(paper_item['context'])
         paper_item['context'] = paper_item['context'].replace(" ", "")
         paper_item['url'] = response.request.url
-        next_ = response.xpath("/html/body/div[@class='main w1000']/"
-                               "div[@class='right right-main']/"
-                               "div[@class='article-box']/div"
-                               "[@class='art-btn']/strong")
-        next_page = next_.xpath("./a[2]/@href").extract()
-        if next_page:
-            next_page = next_page[0]
+        button_first = response.xpath("/html/body/div[@class='main w1000']/"
+                                      "div[@class='right right-main']/"
+                                      "div[@class='article-box']/div"
+                                      "[@class='art-btn']/strong"
+                                      "/a[1]/@href").extract()
+        button_second = response.xpath("/html/body/div[@class='main w1000']/"
+                                       "div[@class='right right-main']/"
+                                       "div[@class='article-box']/div"
+                                       "[@class='art-btn']/strong"
+                                       "/a[2]/@href").extract()
+        judger = response.xpath("/html/body/div[@class='main w1000']/"
+                                "div[@class='right right-main']/div["
+                                "@class='article-box']/div[@class='ar"
+                                "t-btn']/strong/a[@class='preart'][1]/"
+                                "span/text()").extract()
+        judger = str(judger)
+        judger.replace(" ", "")
+
+        if button_second or button_first and "下一篇" in judger:
+            if button_second:
+                next_page = button_second[0]
+            else:
+                next_page = button_first[0]
             temp = next_page[17:25]
             year = temp[0:4]
             month = temp[4:6]
@@ -49,9 +64,8 @@ class PaperSpider(scrapy.Spider):
             print(new_url)
             yield scrapy.Request(new_url, callback=self.parse)
         else:
-            prev_page = next_.xpath("./a[1]/@href").extract()
-            prev_page = prev_page[0]
-            temp = prev_page[17:25]
+            cur_page = str(response.request.url)
+            temp = cur_page[65:73]
             year = temp[0:4]
             month = temp[4:6]
             day = temp[6:8]
@@ -63,7 +77,7 @@ class PaperSpider(scrapy.Spider):
                 else:
                     _year = year
                     _month = str(int(month) + 1)
-                    if int(_month) < 9:
+                    if int(_month) <= 9:
                         _month = "0" + _month
                     _day = "01"
             else:
@@ -75,7 +89,7 @@ class PaperSpider(scrapy.Spider):
             temp = _year + _month + _day
             date = _year + "-" + _month + "/" + _day + "/"
             url_ = "http://paper.people.com.cn/rmrb/html/"
-            new_url = url_ + date + "nw.D110000renmrb_" + temp + "_1-01.htm"
+            new_url = url_ + date + "nw.D110000renmrb_" + temp + "_1-05.htm"
             print(new_url)
             yield scrapy.Request(new_url, callback=self.parse)
         yield paper_item
