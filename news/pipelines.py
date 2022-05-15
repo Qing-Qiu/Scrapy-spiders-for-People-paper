@@ -20,8 +20,16 @@ class NewsPipeline(object):
                                     passwd='root', charset='utf8')
 
     def process_item(self, item, spider):
-        values = (str(item['title'][0]) + ':' + str(item['sub_title'][0]), str(item['url']), str(item['context']))
-        sql = 'INSERT INTO papers(title,url,context) VALUES(%s,%s,%s)'
+        if item['title'] and item['sub_title'] and item['cite_title']:
+            title = str(item['cite_title'][0]) + ':' + str(item['title'][0]) + ':' + str(item['sub_title'][0])
+        elif item['title'] and item['sub_title']:
+            title = str(item['title'][0]) + ':' + str(item['sub_title'][0])
+        elif item['cite_title'] and item['title']:
+            title = str(item['cite_title'][0]) + ':' + str(item['title'][0])
+        elif item['title']:
+            title = str(item['title'][0])
+        values = (title, str(item['url']), str(item['content']))
+        sql = 'INSERT INTO doc_raws(title,url,content) VALUES(%s,%s,%s)'
         self.cursor = self.conn.cursor()
         self.cursor.execute(sql, values)
         self.conn.commit()

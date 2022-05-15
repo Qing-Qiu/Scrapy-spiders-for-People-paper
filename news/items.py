@@ -11,5 +11,6 @@ class NewsItem(scrapy.Item):
 
     title = scrapy.Field()
     sub_title = scrapy.Field()
+    cite_title = scrapy.Field()
     url = scrapy.Field()
-    context = scrapy.Field()
+    content = scrapy.Field()
